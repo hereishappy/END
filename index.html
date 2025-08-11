@@ -80,7 +80,6 @@
                             <option value="">Select work type...</option>
                             <option value="ERECTION">ERECTION</option>
                             <option value="DISMANTLING">DISMANTLING</option>
-                            <option value="AD/PF">AD/PF</option>
                         </select>
                     </div>
 
@@ -314,9 +313,6 @@
             } else if (workType === 'ERECTION') {
                 dismantling = 0;
                 erection = volume;
-            } else if (workType === 'AD/PF') {
-                dismantling = 0;
-                erection = 0;
             }
 
             // Update display
@@ -558,18 +554,23 @@
             // Use the same script as shift start for ATTENDANCE sheet
             const scriptUrl = 'https://script.google.com/macros/s/AKfycbw20vy78voyBLS0RAt6UPjP-mG6BzePqGspQvRY_PGxUGwj_y1WMt3vJIGKyGHT/exec';
             
-            fetch(scriptUrl, {
-                method: 'POST',
-                mode: 'no-cors',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    action: 'addRows',
-                    data: rows
-                })
-            }).catch(error => {
-                console.log('Overtime data sent to Google Sheets');
+            // Send each row individually to ensure proper data handling
+            rows.forEach(row => {
+                fetch(scriptUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'addAttendanceRow',
+                        data: row
+                    })
+                }).then(() => {
+                    console.log('Overtime data sent for:', row[2]);
+                }).catch(error => {
+                    console.log('Error sending overtime data for:', row[2], error);
+                });
             });
         }
 
@@ -684,5 +685,5 @@ Shift completed successfully`;
         // Initialize app when page loads
         window.onload = init;
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96d5e4b297a02e05',t:'MTc1NDg5NjAxOC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96d5fb02073c5d11',t:'MTc1NDg5NjkzMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
