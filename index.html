@@ -590,9 +590,9 @@
             // Calculate total measurement (Erection + Dismantling*2 to get original volume)
             const totalMeasurement = totalErection + (totalDismantling * 2);
             
-            // Calculate manhours
-            const totalWorkers = workers.length; // Total workers in shift
-            const regularHours = totalWorkers * 8; // Regular 8 hours per worker
+            // Calculate manhours - only count workers who worked overtime
+            const workingWorkers = overtimeData.length; // Only workers with overtime hours
+            const regularHours = workingWorkers * 8; // Regular 8 hours per working worker
             
             // Calculate total overtime hours
             let totalOvertimeHours = 0;
@@ -623,7 +623,7 @@ Total Erection: ${totalErection.toFixed(2)} m3
 Total Dismantling: ${totalDismantling.toFixed(2)} m3
 Total Measurement: ${totalMeasurement.toFixed(2)} m3
 
-Total Workers: ${totalWorkers}
+Working Workers: ${workingWorkers}
 Regular Hours: ${regularHours} hrs
 Overtime Hours: ${totalOvertimeHours} hrs
 Total Manhours: ${totalManhours} hrs${workersList}
@@ -683,5 +683,5 @@ Shift completed successfully`;
         // Initialize app when page loads
         window.onload = init;
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96d5b720b1f90e67',t:'MTc1NDg5NDE1Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96d5d4a3755cad1c',t:'MTc1NDg5NTM2MS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
