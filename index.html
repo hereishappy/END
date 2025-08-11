@@ -507,7 +507,7 @@
             if (workType === 'ERECTION') {
                 erection = volume;
             } else if (workType === 'DISMANTLING') {
-                dismantling = volume / 2;
+                dismantling = volume;
             }
 
             const entry = {
@@ -657,7 +657,7 @@
             });
 
             const totalManHours = (workerCount * 8) + totalOT;
-            const productivity = totalManHours > 0 ? ((totalErection + totalDismantling / 2) / totalManHours).toFixed(2) : '0.00';
+            const productivity = totalManHours > 0 ? ((totalErection + totalDismantling ) / totalManHours).toFixed(2) : '0.00';
 
             const report = `DAILY WORK REPORT
 
