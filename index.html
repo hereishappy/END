@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shift End - M3 Tracking</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .pin-input { letter-spacing: 0.5em; }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-50 to-indigo-100 min-h-screen">
+    <div class="container mx-auto px-4 py-6 max-w-md">
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">Shift End</h1>
+            <p class="text-gray-600">M3 Volume Tracking System</p>
+        </div>
+
+        <!-- Login Section -->
+        <div id="loginSection" class="bg-white rounded-2xl shadow-xl p-6 mb-6">
+            <h2 class="text-xl font-semibold text-gray-800 mb-6 text-center">Supervisor Login</h2>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Select Supervisor</label>
+                <select id="supervisorSelect" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                    <option value="">Choose supervisor...</option>
+                    <option value="MAHENDRA KUMAR">MAHENDRA KUMAR</option>
+                    <option value="PINTU SAH">PINTU SAH</option>
+                    <option value="HARKIRAT SINGH">HARKIRAT SINGH</option>
+                    <option value="SUNIL CHAUHAN">SUNIL CHAUHAN</option>
+                    <option value="NSUP1">NSUP1</option>
+                    <option value="NSUP2">NSUP2</option>
+                    <option value="NSUP3">NSUP3</option>
+                    <option value="NSUP4">NSUP4</option>
+                </select>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-medium text-gray-700 mb-2">Enter 4-Digit PIN</label>
+                <input type="password" id="pinInput" maxlength="4" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent pin-input text-center text-lg" placeholder="••••">
+            </div>
+
+            <button onclick="login()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 transform hover:scale-105">
+                Access M3 Tracking
+            </button>
+
+            <div id="loginError" class="mt-3 text-red-600 text-sm text-center hidden"></div>
+        </div>
+
+        <!-- M3 Tracking Section -->
+        <div id="trackingSection" class="hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-6">
+                <div class="mb-4">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">M3 Volume Entry</h3>
+                        <span id="currentDate" class="text-sm text-gray-600"></span>
+                    </div>
+                    <p class="text-sm text-gray-600 mb-2">Supervisor: <span id="loggedSupervisor" class="font-medium"></span></p>
+                    <div class="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-4">
+                        <p class="text-xs text-purple-700">📊 Add multiple M3 entries, then proceed to overtime tracking</p>
+                        <p class="text-xs text-purple-600 font-mono mt-1">DISMANTLING = L×W×H×Q÷2 | ERECTION = L×W×H×Q</p>
+                    </div>
+                </div>
+
+                <!-- M3 Entries List -->
+                <div id="m3EntriesList" class="mb-4 hidden">
+                    <h4 class="text-sm font-medium text-gray-700 mb-2">Added M3 Entries (<span id="entriesCount">0</span>)</h4>
+                    <div id="entriesContainer" class="max-h-32 overflow-y-auto bg-gray-50 rounded-lg p-2 mb-3">
+                    </div>
+                </div>
+
+                <form id="m3Form" class="space-y-4">
+                    <!-- Work Type -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Work Type</label>
+                        <select id="workType" onchange="updateCalculation()" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            <option value="">Select work type...</option>
+                            <option value="ERECTION">ERECTION</option>
+                            <option value="DISMANTLING">DISMANTLING</option>
+                            <option value="AD/PF">AD/PF</option>
+                        </select>
+                    </div>
+
+                    <!-- Description -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                        <input type="text" id="description" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Enter work description...">
+                    </div>
+
+                    <!-- Dimensions Row 1 -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Length (L)</label>
+                            <input type="number" id="length" step="0.1" onchange="updateCalculation()" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="0">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Width (W)</label>
+                            <input type="number" id="width" step="0.1" onchange="updateCalculation()" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="0">
+                        </div>
+                    </div>
+
+                    <!-- Dimensions Row 2 -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Height (H)</label>
+                            <input type="number" id="height" step="0.1" onchange="updateCalculation()" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="0">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Quantity (Q)</label>
+                            <input type="number" id="quantity" step="1" onchange="updateCalculation()" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="0">
+                        </div>
+                    </div>
+
+                    <!-- Calculation Results -->
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <div class="grid grid-cols-3 gap-3 text-center">
+                            <div>
+                                <p class="text-xs text-gray-600 mb-1">Volume</p>
+                                <p id="volumeDisplay" class="text-lg font-semibold text-gray-800">0</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-600 mb-1">Dismantling</p>
+                                <p id="dismantlingDisplay" class="text-lg font-semibold text-red-600">0</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-600 mb-1">Erection</p>
+                                <p id="erectionDisplay" class="text-lg font-semibold text-green-600">0</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3">
+                        <button type="button" onclick="addM3Entry()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200">
+                            Add Entry
+                        </button>
+                        <button type="button" onclick="proceedToOvertime()" id="proceedBtn" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 opacity-50 cursor-not-allowed" disabled>
+                            Proceed to Overtime
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Overtime Section -->
+        <div id="overtimeSection" class="hidden">
+            <div class="bg-white rounded-2xl shadow-xl p-6">
+                <div class="mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Overtime Tracking</h3>
+                    <p class="text-sm text-gray-600 mb-2">Supervisor: <span id="overtimeSupervisor" class="font-medium"></span></p>
+                    <div class="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-4">
+                        <p class="text-xs text-orange-700">⏰ Select workers and enter overtime hours</p>
+                        <p class="text-xs text-orange-600">Data will be saved to ATTENDANCE sheet</p>
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <div class="flex justify-between items-center mb-3">
+                        <label class="text-sm font-medium text-gray-700">Workers Overtime Entry</label>
+                        <div class="text-xs text-gray-500">
+                            <span id="overtimeSelectedCount">0</span> with overtime
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <button onclick="clearAllOvertime()" class="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-full">Clear All Hours</button>
+                    </div>
+
+                    <div class="max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-3 mb-4">
+                        <div id="overtimeWorkersList" class="space-y-3"></div>
+                    </div>
+
+                    <button onclick="submitAllData()" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 transform hover:scale-105">
+                        Submit All Data & Generate Report
+                    </button>
+                </div>
+            </div>
+
+            <!-- Back Button -->
+            <div class="mt-4 text-center">
+                <button onclick="backToM3()" class="text-gray-600 hover:text-gray-800 text-sm underline mr-4">
+                    Back to M3 Entry
+                </button>
+                <button onclick="logout()" class="text-gray-600 hover:text-gray-800 text-sm underline">
+                    Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Supervisor PIN mapping (same as shift start)
+        const supervisorPins = {
+            'MAHENDRA KUMAR': '1122',
+            'PINTU SAH': '3344',
+            'HARKIRAT SINGH': '5566',
+            'SUNIL CHAUHAN': '7788',
+            'NSUP1': '9012',
+            'NSUP2': '2345',
+            'NSUP3': '6789',
+            'NSUP4': '1010'
+        };
+
+        let currentSupervisor = '';
+        let m3Entries = [];
+
+        // Worker names list (same as shift start)
+        const workers = [
+            'HARKIRAT', 'MAHENDRA KUMAR', 'SUNIL CHAUHAN', 'PINTU KUMAR SAH',
+            'AMAN KUMAR', 'ATUL MAHADEO', 'CHANDAN KUMAR', 'DEEPAK DAS',
+            'DEEPAK KUMAR', 'DHIRAJ KUMAR MANJI', 'DAULAT YADAV', 'FOOL SINGH',
+            'KIRAN PASWAN', 'KUNDAN KUMAR', 'MITLESH KUMAR', 'NIRAJ KUMAR',
+            'NANDAN KUMAR', 'NARESH KUMAR', 'OM PRAKASH', 'PANDURANG',
+            'RAJU KUMAR', 'ROSHAN CHAUHAN', 'RAM BABU', 'RAM KISHOR DAS',
+            'RAHUL KUMAR', 'SANDIP MADHUKAR', 'SAHAB CHAUHAN', 'SARVESH KUMAR',
+            'SANJITH YADAV', 'SHIVAM KUMAR', 'SUDISH SAH', 'VISHAL PRUTHVIRAJ'
+        ];
+
+        // Initialize the app
+        function init() {
+            updateDate();
+            createOvertimeWorkersList();
+        }
+
+        // Update current date display
+        function updateDate() {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('en-IN', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            document.getElementById('currentDate').textContent = dateStr;
+        }
+
+        // Login function
+        function login() {
+            const supervisor = document.getElementById('supervisorSelect').value;
+            const pin = document.getElementById('pinInput').value;
+            const errorDiv = document.getElementById('loginError');
+
+            if (!supervisor) {
+                showError('Please select a supervisor');
+                return;
+            }
+
+            if (!pin || pin.length !== 4) {
+                showError('Please enter a 4-digit PIN');
+                return;
+            }
+
+            if (supervisorPins[supervisor] !== pin) {
+                showError('Invalid PIN for selected supervisor');
+                return;
+            }
+
+            // Successful login
+            currentSupervisor = supervisor;
+            document.getElementById('loggedSupervisor').textContent = supervisor;
+            document.getElementById('overtimeSupervisor').textContent = supervisor;
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('trackingSection').classList.remove('hidden');
+            errorDiv.classList.add('hidden');
+        }
+
+        // Show error message
+        function showError(message) {
+            const errorDiv = document.getElementById('loginError');
+            errorDiv.textContent = message;
+            errorDiv.classList.remove('hidden');
+        }
+
+        // Create overtime workers list with individual hour inputs
+        function createOvertimeWorkersList() {
+            const workersList = document.getElementById('overtimeWorkersList');
+            workersList.innerHTML = '';
+            
+            workers.forEach(worker => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center justify-between bg-gray-50 rounded-lg p-2';
+                div.innerHTML = `
+                    <label class="text-sm text-gray-700 flex-1">${worker}</label>
+                    <input type="number" id="hours_${worker}" value="" step="0.5" min="0" max="12" 
+                           onchange="updateOvertimeSelectedCount()" 
+                           class="w-20 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent text-center text-sm" 
+                           placeholder="0">
+                    <span class="text-xs text-gray-500 ml-2">hrs</span>
+                `;
+                workersList.appendChild(div);
+            });
+        }
+
+        // Update calculations based on inputs
+        function updateCalculation() {
+            const length = parseFloat(document.getElementById('length').value) || 0;
+            const width = parseFloat(document.getElementById('width').value) || 0;
+            const height = parseFloat(document.getElementById('height').value) || 0;
+            const quantity = parseFloat(document.getElementById('quantity').value) || 0;
+            const workType = document.getElementById('workType').value;
+
+            // Calculate volume
+            const volume = length * width * height * quantity;
+            
+            // Calculate dismantling and erection based on work type
+            let dismantling = 0;
+            let erection = 0;
+
+            if (workType === 'DISMANTLING') {
+                dismantling = volume / 2;
+                erection = 0;
+            } else if (workType === 'ERECTION') {
+                dismantling = 0;
+                erection = volume;
+            } else if (workType === 'AD/PF') {
+                dismantling = 0;
+                erection = 0;
+            }
+
+            // Update display
+            document.getElementById('volumeDisplay').textContent = volume.toFixed(2);
+            document.getElementById('dismantlingDisplay').textContent = dismantling.toFixed(2);
+            document.getElementById('erectionDisplay').textContent = erection.toFixed(2);
+        }
+
+        // Add M3 entry to list
+        function addM3Entry() {
+            const workType = document.getElementById('workType').value;
+            const description = document.getElementById('description').value;
+            const length = parseFloat(document.getElementById('length').value) || 0;
+            const width = parseFloat(document.getElementById('width').value) || 0;
+            const height = parseFloat(document.getElementById('height').value) || 0;
+            const quantity = parseFloat(document.getElementById('quantity').value) || 0;
+
+            // Validation
+            if (!workType) {
+                alert('Please select work type');
+                return;
+            }
+            if (!description.trim()) {
+                alert('Please enter description');
+                return;
+            }
+            if (length <= 0 || width <= 0 || height <= 0 || quantity <= 0) {
+                alert('Please enter valid dimensions and quantity');
+                return;
+            }
+
+            // Calculate values
+            const volume = length * width * height * quantity;
+            let dismantling = 0;
+            let erection = 0;
+
+            if (workType === 'DISMANTLING') {
+                dismantling = volume / 2;
+            } else if (workType === 'ERECTION') {
+                erection = volume;
+            }
+
+            // Add to entries array
+            const entry = {
+                workType,
+                description,
+                length,
+                width,
+                height,
+                quantity,
+                volume,
+                dismantling,
+                erection
+            };
+
+            m3Entries.push(entry);
+            updateEntriesList();
+            clearCurrentForm();
+            
+            // Enable proceed button
+            const proceedBtn = document.getElementById('proceedBtn');
+            proceedBtn.disabled = false;
+            proceedBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        }
+
+        // Update entries list display
+        function updateEntriesList() {
+            const entriesList = document.getElementById('m3EntriesList');
+            const entriesContainer = document.getElementById('entriesContainer');
+            const entriesCount = document.getElementById('entriesCount');
+            
+            entriesCount.textContent = m3Entries.length;
+            
+            if (m3Entries.length > 0) {
+                entriesList.classList.remove('hidden');
+                entriesContainer.innerHTML = '';
+                
+                m3Entries.forEach((entry, index) => {
+                    const entryDiv = document.createElement('div');
+                    entryDiv.className = 'text-xs bg-white rounded p-2 mb-1 border';
+                    entryDiv.innerHTML = `
+                        <div class="flex justify-between items-center">
+                            <span><strong>${entry.workType}</strong> - ${entry.description}</span>
+                            <button onclick="removeEntry(${index})" class="text-red-500 hover:text-red-700">×</button>
+                        </div>
+                        <div class="text-gray-600 mt-1">
+                            ${entry.length}×${entry.width}×${entry.height}×${entry.quantity} = Vol: ${entry.volume.toFixed(2)}
+                        </div>
+                    `;
+                    entriesContainer.appendChild(entryDiv);
+                });
+            } else {
+                entriesList.classList.add('hidden');
+            }
+        }
+
+        // Remove entry from list
+        function removeEntry(index) {
+            m3Entries.splice(index, 1);
+            updateEntriesList();
+            
+            if (m3Entries.length === 0) {
+                const proceedBtn = document.getElementById('proceedBtn');
+                proceedBtn.disabled = true;
+                proceedBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        // Clear current form
+        function clearCurrentForm() {
+            document.getElementById('m3Form').reset();
+            document.getElementById('volumeDisplay').textContent = '0';
+            document.getElementById('dismantlingDisplay').textContent = '0';
+            document.getElementById('erectionDisplay').textContent = '0';
+        }
+
+        // Proceed to overtime section
+        function proceedToOvertime() {
+            if (m3Entries.length === 0) {
+                alert('Please add at least one M3 entry');
+                return;
+            }
+            
+            document.getElementById('trackingSection').classList.add('hidden');
+            document.getElementById('overtimeSection').classList.remove('hidden');
+        }
+
+        // Back to M3 section
+        function backToM3() {
+            document.getElementById('overtimeSection').classList.add('hidden');
+            document.getElementById('trackingSection').classList.remove('hidden');
+        }
+
+        // Overtime worker selection functions
+        function clearAllOvertime() {
+            const hourInputs = document.querySelectorAll('#overtimeWorkersList input[type="number"]');
+            hourInputs.forEach(input => input.value = '');
+            updateOvertimeSelectedCount();
+        }
+
+        function updateOvertimeSelectedCount() {
+            const hourInputs = document.querySelectorAll('#overtimeWorkersList input[type="number"]');
+            let count = 0;
+            hourInputs.forEach(input => {
+                if (parseFloat(input.value) > 0) {
+                    count++;
+                }
+            });
+            document.getElementById('overtimeSelectedCount').textContent = count;
+        }
+
+        // Submit all data (M3 + Overtime)
+        function submitAllData() {
+            // Get overtime data for each worker
+            const overtimeData = [];
+            const hourInputs = document.querySelectorAll('#overtimeWorkersList input[type="number"]');
+            
+            hourInputs.forEach(input => {
+                const hours = parseFloat(input.value) || 0;
+                if (hours > 0) {
+                    const workerId = input.id.replace('hours_', '');
+                    overtimeData.push({
+                        worker: workerId,
+                        hours: hours
+                    });
+                }
+            });
+
+            // Save all M3 entries to Google Sheets
+            saveAllM3ToGoogleSheets();
+            
+            // Save overtime data if any
+            if (overtimeData.length > 0) {
+                saveOvertimeToGoogleSheets(overtimeData);
+            }
+
+            // Generate WhatsApp report
+            generateWhatsAppReport(overtimeData);
+        }
+
+        // Save all M3 entries to Google Sheets
+        function saveAllM3ToGoogleSheets() {
+            const date = new Date().toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: '2-digit', 
+                year: 'numeric'
+            });
+            
+            m3Entries.forEach(entry => {
+                const rowData = [
+                    date,
+                    currentSupervisor,
+                    entry.description,
+                    entry.length,
+                    entry.width,
+                    entry.height,
+                    entry.quantity,
+                    entry.volume,
+                    entry.dismantling,
+                    entry.erection
+                ];
+                
+                // Google Apps Script Web App URL for M3
+                const scriptUrl = 'https://script.google.com/macros/s/YOUR_M3_SCRIPT_ID/exec';
+                
+                fetch(scriptUrl, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'addM3Row',
+                        data: rowData
+                    })
+                }).catch(error => {
+                    console.log('M3 data sent to Google Sheets');
+                });
+            });
+        }
+
+        // Save overtime data to Google Sheets (ATTENDANCE sheet)
+        function saveOvertimeToGoogleSheets(overtimeData) {
+            const date = new Date().toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: '2-digit', 
+                year: 'numeric'
+            });
+            
+            // Create rows for each overtime worker with their individual hours
+            const rows = overtimeData.map(item => [
+                date,
+                currentSupervisor,
+                item.worker,
+                item.hours // Individual overtime hours for each worker
+            ]);
+            
+            // Use the same script as shift start for ATTENDANCE sheet
+            const scriptUrl = 'https://script.google.com/macros/s/AKfycbw20vy78voyBLS0RAt6UPjP-mG6BzePqGspQvRY_PGxUGwj_y1WMt3vJIGKyGHT/exec';
+            
+            fetch(scriptUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'addRows',
+                    data: rows
+                })
+            }).catch(error => {
+                console.log('Overtime data sent to Google Sheets');
+            });
+        }
+
+        // Generate WhatsApp report
+        function generateWhatsAppReport(overtimeData) {
+            const date = new Date().toLocaleDateString('en-IN');
+            
+            // Calculate totals
+            let totalVolume = 0;
+            let totalDismantling = 0;
+            let totalErection = 0;
+            
+            m3Entries.forEach(entry => {
+                totalVolume += entry.volume;
+                totalDismantling += entry.dismantling;
+                totalErection += entry.erection;
+            });
+            
+            // Calculate total measurement (Erection + Dismantling*2 to get original volume)
+            const totalMeasurement = totalErection + (totalDismantling * 2);
+            
+            // Calculate manhours
+            const totalWorkers = workers.length; // Total workers in shift
+            const regularHours = totalWorkers * 8; // Regular 8 hours per worker
+            
+            // Calculate total overtime hours
+            let totalOvertimeHours = 0;
+            overtimeData.forEach(item => {
+                totalOvertimeHours += item.hours;
+            });
+            
+            const totalManhours = regularHours + totalOvertimeHours;
+            
+            // Calculate productivity (Total measurement / Total manhours)
+            const productivity = totalManhours > 0 ? (totalMeasurement / totalManhours).toFixed(2) : '0.00';
+            
+            // Create worker list with overtime
+            let workersList = '';
+            if (overtimeData.length > 0) {
+                workersList = '\nWorkers with Overtime:\n';
+                overtimeData.forEach(item => {
+                    workersList += `${item.worker} - ${item.hours} hrs\n`;
+                });
+            }
+            
+            const message = `SHIFT END REPORT
+
+Date: ${date}
+Supervisor: ${currentSupervisor}
+
+Total Erection: ${totalErection.toFixed(2)} m3
+Total Dismantling: ${totalDismantling.toFixed(2)} m3
+Total Measurement: ${totalMeasurement.toFixed(2)} m3
+
+Total Workers: ${totalWorkers}
+Regular Hours: ${regularHours} hrs
+Overtime Hours: ${totalOvertimeHours} hrs
+Total Manhours: ${totalManhours} hrs${workersList}
+Productivity: ${productivity} m3/hr
+
+Shift completed successfully`;
+
+            // Show success message
+            alert('All data saved successfully!');
+            
+            // Redirect to WhatsApp
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+            
+            // Reset for next shift
+            resetApp();
+        }
+
+        // Reset app for next shift
+        function resetApp() {
+            m3Entries = [];
+            updateEntriesList();
+            clearCurrentForm();
+            clearAllOvertime();
+            
+            const proceedBtn = document.getElementById('proceedBtn');
+            proceedBtn.disabled = true;
+            proceedBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            
+            // Go back to M3 section
+            document.getElementById('overtimeSection').classList.add('hidden');
+            document.getElementById('trackingSection').classList.remove('hidden');
+        }
+
+        // Logout function
+        function logout() {
+            currentSupervisor = '';
+            m3Entries = [];
+            document.getElementById('supervisorSelect').value = '';
+            document.getElementById('pinInput').value = '';
+            clearCurrentForm();
+            clearAllOvertime();
+            updateEntriesList();
+            
+            // Reset proceed button
+            const proceedBtn = document.getElementById('proceedBtn');
+            proceedBtn.disabled = true;
+            proceedBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            
+            // Show login section, hide others
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('trackingSection').classList.add('hidden');
+            document.getElementById('overtimeSection').classList.add('hidden');
+            document.getElementById('loginError').classList.add('hidden');
+        }
+
+        // Initialize app when page loads
+        window.onload = init;
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96d5b720b1f90e67',t:'MTc1NDg5NDE1Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
