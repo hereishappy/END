@@ -3,194 +3,402 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shift End - M3 Tracking</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Work Tracker App</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        .pin-input { letter-spacing: 0.5em; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            min-height: calc(100vh - 20px);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2196F3, #21CBF3);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.5em;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .auth-screen {
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .auth-screen h2 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e1e1;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #2196F3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.2);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #2196F3, #21CBF3);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(33, 150, 243, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
+        }
+
+        .card {
+            background: #f8f9ff;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2196F3;
+        }
+
+        .card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .entry-item {
+            background: white;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 10px;
+            border: 1px solid #e1e1e1;
+            position: relative;
+        }
+
+        .entry-item h4 {
+            color: #2196F3;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+
+        .remove-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ff4757;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 25px;
+            height: 25px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .calc-display {
+            background: #e8f5e8;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-weight: 500;
+            color: #2e7d2e;
+        }
+
+        .worker-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .worker-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: white;
+            margin-bottom: 5px;
+            border-radius: 8px;
+            border: 1px solid #e1e1e1;
+        }
+
+        .worker-name {
+            flex-grow: 1;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .worker-input {
+            width: 60px;
+            padding: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .nav-btn {
+            flex: 1;
+            margin: 0 5px;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .nav-btn.active {
+            background: linear-gradient(135deg, #2196F3, #21CBF3);
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .report-preview {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-family: monospace;
+            white-space: pre-line;
+            font-size: 14px;
+            border: 1px solid #dee2e6;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .step {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #e1e1e1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 5px;
+            font-weight: bold;
+            color: #999;
+        }
+
+        .step.active {
+            background: #2196F3;
+            color: white;
+        }
+
+        .step.completed {
+            background: #4CAF50;
+            color: white;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+                min-height: 100vh;
+            }
+            
+            .content {
+                padding: 15px;
+            }
+        }
     </style>
 </head>
-<body class="bg-gradient-to-br from-purple-50 to-indigo-100 min-h-screen">
-    <div class="container mx-auto px-4 py-6 max-w-md">
-        <!-- Header -->
-        <div class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-gray-800 mb-2">Shift End</h1>
-            <p class="text-gray-600">M3 Volume Tracking System</p>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Work Tracker</h1>
+            <p>Daily Work & Attendance Management</p>
         </div>
 
-        <!-- Login Section -->
-        <div id="loginSection" class="bg-white rounded-2xl shadow-xl p-6 mb-6">
-            <h2 class="text-xl font-semibold text-gray-800 mb-6 text-center">Supervisor Login</h2>
-            
-            <div class="mb-4">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Select Supervisor</label>
-                <select id="supervisorSelect" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-                    <option value="">Choose supervisor...</option>
-                    <option value="MAHENDRA KUMAR">MAHENDRA KUMAR</option>
-                    <option value="PINTU SAH">PINTU SAH</option>
-                    <option value="HARKIRAT SINGH">HARKIRAT SINGH</option>
-                    <option value="SUNIL CHAUHAN">SUNIL CHAUHAN</option>
-                    <option value="NSUP1">NSUP1</option>
-                    <option value="NSUP2">NSUP2</option>
-                    <option value="NSUP3">NSUP3</option>
-                    <option value="NSUP4">NSUP4</option>
-                </select>
-            </div>
-
-            <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Enter 4-Digit PIN</label>
-                <input type="password" id="pinInput" maxlength="4" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent pin-input text-center text-lg" placeholder="••••">
-            </div>
-
-            <button onclick="login()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 transform hover:scale-105">
-                Access M3 Tracking
-            </button>
-
-            <div id="loginError" class="mt-3 text-red-600 text-sm text-center hidden"></div>
-        </div>
-
-        <!-- M3 Tracking Section -->
-        <div id="trackingSection" class="hidden">
-            <div class="bg-white rounded-2xl shadow-xl p-6">
-                <div class="mb-4">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-lg font-semibold text-gray-800">M3 Volume Entry</h3>
-                        <span id="currentDate" class="text-sm text-gray-600"></span>
-                    </div>
-                    <p class="text-sm text-gray-600 mb-2">Supervisor: <span id="loggedSupervisor" class="font-medium"></span></p>
-                    <div class="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-4">
-                        <p class="text-xs text-purple-700">📊 Add multiple M3 entries, then proceed to overtime tracking</p>
-                        <p class="text-xs text-purple-600 font-mono mt-1">DISMANTLING = L×W×H×Q÷2 | ERECTION = L×W×H×Q</p>
-                    </div>
+        <!-- Authentication Screen -->
+        <div id="authScreen" class="content">
+            <div class="auth-screen">
+                <h2>Supervisor Login</h2>
+                <div class="form-group">
+                    <label for="supervisorSelect">Select Supervisor:</label>
+                    <select id="supervisorSelect">
+                        <option value="">Choose Supervisor</option>
+                        <option value="MAHENDRA KUMAR">MAHENDRA KUMAR</option>
+                        <option value="PINTU SAH">PINTU SAH</option>
+                        <option value="HARKIRAT SINGH">HARKIRAT SINGH</option>
+                        <option value="SUNIL CHAUHAN">SUNIL CHAUHAN</option>
+                        <option value="NSUP1">NSUP1</option>
+                        <option value="NSUP2">NSUP2</option>
+                        <option value="NSUP3">NSUP3</option>
+                        <option value="NSUP4">NSUP4</option>
+                    </select>
                 </div>
-
-                <!-- M3 Entries List -->
-                <div id="m3EntriesList" class="mb-4 hidden">
-                    <h4 class="text-sm font-medium text-gray-700 mb-2">Added M3 Entries (<span id="entriesCount">0</span>)</h4>
-                    <div id="entriesContainer" class="max-h-32 overflow-y-auto bg-gray-50 rounded-lg p-2 mb-3">
-                    </div>
+                <div class="form-group">
+                    <label for="pinInput">Enter PIN:</label>
+                    <input type="password" id="pinInput" placeholder="4-digit PIN" maxlength="4">
                 </div>
-
-                <form id="m3Form" class="space-y-4">
-                    <!-- Work Type -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Work Type</label>
-                        <select id="workType" onchange="updateCalculation()" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
-                            <option value="">Select work type...</option>
-                            <option value="ERECTION">ERECTION</option>
-                            <option value="DISMANTLING">DISMANTLING</option>
-                        </select>
-                    </div>
-
-                    <!-- Description -->
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Description</label>
-                        <input type="text" id="description" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Enter work description...">
-                    </div>
-
-                    <!-- Dimensions Row 1 -->
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Length (L)</label>
-                            <input type="number" id="length" step="0.1" onchange="updateCalculation()" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="0">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Width (W)</label>
-                            <input type="number" id="width" step="0.1" onchange="updateCalculation()" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="0">
-                        </div>
-                    </div>
-
-                    <!-- Dimensions Row 2 -->
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Height (H)</label>
-                            <input type="number" id="height" step="0.1" onchange="updateCalculation()" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="0">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Quantity (Q)</label>
-                            <input type="number" id="quantity" step="1" onchange="updateCalculation()" class="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="0">
-                        </div>
-                    </div>
-
-                    <!-- Calculation Results -->
-                    <div class="bg-gray-50 rounded-lg p-4">
-                        <div class="grid grid-cols-3 gap-3 text-center">
-                            <div>
-                                <p class="text-xs text-gray-600 mb-1">Volume</p>
-                                <p id="volumeDisplay" class="text-lg font-semibold text-gray-800">0</p>
-                            </div>
-                            <div>
-                                <p class="text-xs text-gray-600 mb-1">Dismantling</p>
-                                <p id="dismantlingDisplay" class="text-lg font-semibold text-red-600">0</p>
-                            </div>
-                            <div>
-                                <p class="text-xs text-gray-600 mb-1">Erection</p>
-                                <p id="erectionDisplay" class="text-lg font-semibold text-green-600">0</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3">
-                        <button type="button" onclick="addM3Entry()" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200">
-                            Add Entry
-                        </button>
-                        <button type="button" onclick="proceedToOvertime()" id="proceedBtn" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 opacity-50 cursor-not-allowed" disabled>
-                            Proceed to Overtime
-                        </button>
-                    </div>
-                </form>
+                <button class="btn" onclick="login()">Login</button>
             </div>
         </div>
 
-        <!-- Overtime Section -->
-        <div id="overtimeSection" class="hidden">
-            <div class="bg-white rounded-2xl shadow-xl p-6">
-                <div class="mb-4">
-                    <h3 class="text-lg font-semibold text-gray-800 mb-2">Overtime Tracking</h3>
-                    <p class="text-sm text-gray-600 mb-2">Supervisor: <span id="overtimeSupervisor" class="font-medium"></span></p>
-                    <div class="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-4">
-                        <p class="text-xs text-orange-700">⏰ Select workers and enter overtime hours</p>
-                        <p class="text-xs text-orange-600">Data will be saved to ATTENDANCE sheet</p>
-                    </div>
-                </div>
-
-                <div class="mb-4">
-                    <div class="flex justify-between items-center mb-3">
-                        <label class="text-sm font-medium text-gray-700">Workers Overtime Entry</label>
-                        <div class="text-xs text-gray-500">
-                            <span id="overtimeSelectedCount">0</span> with overtime
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <button onclick="clearAllOvertime()" class="text-xs bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-full">Clear All Hours</button>
-                    </div>
-
-                    <div class="max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-3 mb-4">
-                        <div id="overtimeWorkersList" class="space-y-3"></div>
-                    </div>
-
-                    <button onclick="submitAllData()" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 transform hover:scale-105">
-                        Submit All Data & Generate Report
-                    </button>
-                </div>
+        <!-- Main App Screen -->
+        <div id="mainScreen" class="content hidden">
+            <div class="step-indicator">
+                <div class="step active" id="step1">1</div>
+                <div class="step" id="step2">2</div>
             </div>
 
-            <!-- Back Button -->
-            <div class="mt-4 text-center">
-                <button onclick="backToM3()" class="text-gray-600 hover:text-gray-800 text-sm underline mr-4">
-                    Back to M3 Entry
-                </button>
-                <button onclick="logout()" class="text-gray-600 hover:text-gray-800 text-sm underline">
-                    Logout
-                </button>
+            <div class="navigation">
+                <button class="nav-btn active" id="workBtn" onclick="showCard('work')">Work Entries</button>
+                <button class="nav-btn" id="attendanceBtn" onclick="showCard('attendance')">Attendance</button>
+            </div>
+
+            <!-- Work Entry Card -->
+            <div id="workCard" class="card">
+                <h3>End Shift - <span id="workDate"></span></h3>
+                <div class="form-group">
+                    <label for="workDateInput">Date:</label>
+                    <input type="date" id="workDateInput" onchange="updateWorkDate()">
+                </div>
+                
+                <div class="form-group">
+                    <label for="workType">Work Type:</label>
+                    <select id="workType" onchange="updateCalculations()">
+                        <option value="">Select Work Type</option>
+                        <option value="ERECTION">ERECTION</option>
+                        <option value="DISMANTLING">DISMANTLING</option>
+                        <option value="DESCRIPTION">DESCRIPTION</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Description:</label>
+                    <input type="text" id="description" placeholder="Work description">
+                </div>
+
+                <div class="form-group">
+                    <label for="length">Length (L):</label>
+                    <input type="number" id="length" step="0.01" placeholder="0" oninput="updateCalculations()">
+                </div>
+
+                <div class="form-group">
+                    <label for="width">Width (W):</label>
+                    <input type="number" id="width" step="0.01" placeholder="0" oninput="updateCalculations()">
+                </div>
+
+                <div class="form-group">
+                    <label for="height">Height (H):</label>
+                    <input type="number" id="height" step="0.01" placeholder="0" oninput="updateCalculations()">
+                </div>
+
+                <div class="form-group">
+                    <label for="quantity">Quantity:</label>
+                    <input type="number" id="quantity" step="1" placeholder="0" oninput="updateCalculations()">
+                </div>
+
+                <div class="calc-display" id="calculationDisplay">
+                    Volume: 0 | Erection: 0 | Dismantling: 0
+                </div>
+
+                <button class="btn" onclick="addWorkEntry()">Add Entry</button>
+
+                <div id="workEntries"></div>
+                <button class="btn btn-secondary" onclick="proceedToAttendance()" id="proceedBtn" style="display: none;">Proceed to Attendance</button>
+            </div>
+
+            <!-- Attendance Card -->
+            <div id="attendanceCard" class="card hidden">
+                <h3>End Shift Productivity</h3>
+                
+                <div class="form-group">
+                    <label for="workerCount">Number of Workers:</label>
+                    <input type="number" id="workerCount" min="1" value="2" oninput="updateWorkerList()">
+                </div>
+
+                <h4>Workers Overtime (Hours):</h4>
+                <div class="worker-list" id="workerList"></div>
+
+                <div class="calc-display" id="attendanceCalc">
+                    Total Manhours: 16
+                </div>
+
+                <div class="report-preview" id="reportPreview"></div>
+
+                <button class="btn" onclick="submitAndShare()">Submit & Share Report</button>
+                <button class="btn btn-secondary" onclick="goBackToWork()">Back to Work Entries</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Supervisor PIN mapping (same as shift start)
+        // Authentication data
         const supervisorPins = {
             'MAHENDRA KUMAR': '1122',
             'PINTU SAH': '3344',
@@ -202,10 +410,7 @@
             'NSUP4': '1010'
         };
 
-        let currentSupervisor = '';
-        let m3Entries = [];
-
-        // Worker names list (same as shift start)
+        // Worker list
         const workers = [
             'HARKIRAT', 'MAHENDRA KUMAR', 'SUNIL CHAUHAN', 'PINTU KUMAR SAH',
             'AMAN KUMAR', 'ATUL MAHADEO', 'CHANDAN KUMAR', 'DEEPAK DAS',
@@ -217,145 +422,94 @@
             'SANJITH YADAV', 'SHIVAM KUMAR', 'SUDISH SAH', 'VISHAL PRUTHVIRAJ'
         ];
 
-        // Initialize the app
-        function init() {
-            updateDate();
-            createOvertimeWorkersList();
-        }
+        // Application state
+        let currentSupervisor = '';
+        let workEntries = [];
+        let currentCard = 'work';
 
-        // Update current date display
-        function updateDate() {
-            const now = new Date();
-            const dateStr = now.toLocaleDateString('en-IN', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-            });
-            document.getElementById('currentDate').textContent = dateStr;
-        }
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('workDateInput').value = today;
+            updateWorkDate();
+            updateWorkerList();
+        });
 
-        // Login function
         function login() {
             const supervisor = document.getElementById('supervisorSelect').value;
             const pin = document.getElementById('pinInput').value;
-            const errorDiv = document.getElementById('loginError');
 
             if (!supervisor) {
-                showError('Please select a supervisor');
+                alert('Please select a supervisor');
                 return;
             }
 
-            if (!pin || pin.length !== 4) {
-                showError('Please enter a 4-digit PIN');
+            if (!pin) {
+                alert('Please enter PIN');
                 return;
             }
 
-            if (supervisorPins[supervisor] !== pin) {
-                showError('Invalid PIN for selected supervisor');
-                return;
+            if (supervisorPins[supervisor] === pin) {
+                currentSupervisor = supervisor;
+                document.getElementById('authScreen').classList.add('hidden');
+                document.getElementById('mainScreen').classList.remove('hidden');
+                updateReportPreview();
+            } else {
+                alert('Invalid PIN. Please try again.');
+                document.getElementById('pinInput').value = '';
             }
-
-            // Successful login
-            currentSupervisor = supervisor;
-            document.getElementById('loggedSupervisor').textContent = supervisor;
-            document.getElementById('overtimeSupervisor').textContent = supervisor;
-            document.getElementById('loginSection').classList.add('hidden');
-            document.getElementById('trackingSection').classList.remove('hidden');
-            errorDiv.classList.add('hidden');
         }
 
-        // Show error message
-        function showError(message) {
-            const errorDiv = document.getElementById('loginError');
-            errorDiv.textContent = message;
-            errorDiv.classList.remove('hidden');
+        function updateWorkDate() {
+            const date = document.getElementById('workDateInput').value;
+            const formattedDate = new Date(date).toLocaleDateString('en-GB');
+            document.getElementById('workDate').textContent = formattedDate;
         }
 
-        // Create overtime workers list with individual hour inputs
-        function createOvertimeWorkersList() {
-            const workersList = document.getElementById('overtimeWorkersList');
-            workersList.innerHTML = '';
-            
-            workers.forEach(worker => {
-                const div = document.createElement('div');
-                div.className = 'flex items-center justify-between bg-gray-50 rounded-lg p-2';
-                div.innerHTML = `
-                    <label class="text-sm text-gray-700 flex-1">${worker}</label>
-                    <input type="number" id="hours_${worker}" value="" step="0.5" min="0" max="12" 
-                           onchange="updateOvertimeSelectedCount()" 
-                           class="w-20 p-2 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-transparent text-center text-sm" 
-                           placeholder="0">
-                    <span class="text-xs text-gray-500 ml-2">hrs</span>
-                `;
-                workersList.appendChild(div);
-            });
-        }
-
-        // Update calculations based on inputs
-        function updateCalculation() {
+        function updateCalculations() {
+            const workType = document.getElementById('workType').value;
             const length = parseFloat(document.getElementById('length').value) || 0;
             const width = parseFloat(document.getElementById('width').value) || 0;
             const height = parseFloat(document.getElementById('height').value) || 0;
-            const quantity = parseFloat(document.getElementById('quantity').value) || 0;
-            const workType = document.getElementById('workType').value;
+            const quantity = parseInt(document.getElementById('quantity').value) || 0;
 
-            // Calculate volume
             const volume = length * width * height * quantity;
-            
-            // Calculate dismantling and erection based on work type
-            let dismantling = 0;
             let erection = 0;
+            let dismantling = 0;
 
-            if (workType === 'DISMANTLING') {
-                dismantling = volume / 2;
-                erection = 0;
-            } else if (workType === 'ERECTION') {
-                dismantling = 0;
+            if (workType === 'ERECTION') {
                 erection = volume;
+            } else if (workType === 'DISMANTLING') {
+                dismantling = volume / 2;
             }
 
-            // Update display
-            document.getElementById('volumeDisplay').textContent = volume.toFixed(2);
-            document.getElementById('dismantlingDisplay').textContent = dismantling.toFixed(2);
-            document.getElementById('erectionDisplay').textContent = erection.toFixed(2);
+            document.getElementById('calculationDisplay').textContent = 
+                `Volume: ${volume.toFixed(2)} | Erection: ${erection.toFixed(2)} | Dismantling: ${dismantling.toFixed(2)}`;
         }
 
-        // Add M3 entry to list
-        function addM3Entry() {
+        function addWorkEntry() {
             const workType = document.getElementById('workType').value;
             const description = document.getElementById('description').value;
             const length = parseFloat(document.getElementById('length').value) || 0;
             const width = parseFloat(document.getElementById('width').value) || 0;
             const height = parseFloat(document.getElementById('height').value) || 0;
-            const quantity = parseFloat(document.getElementById('quantity').value) || 0;
+            const quantity = parseInt(document.getElementById('quantity').value) || 0;
 
-            // Validation
-            if (!workType) {
-                alert('Please select work type');
-                return;
-            }
-            if (!description.trim()) {
-                alert('Please enter description');
-                return;
-            }
-            if (length <= 0 || width <= 0 || height <= 0 || quantity <= 0) {
-                alert('Please enter valid dimensions and quantity');
+            if (!workType || !description) {
+                alert('Please fill in work type and description');
                 return;
             }
 
-            // Calculate values
             const volume = length * width * height * quantity;
-            let dismantling = 0;
             let erection = 0;
+            let dismantling = 0;
 
-            if (workType === 'DISMANTLING') {
-                dismantling = volume / 2;
-            } else if (workType === 'ERECTION') {
+            if (workType === 'ERECTION') {
                 erection = volume;
+            } else if (workType === 'DISMANTLING') {
+                dismantling = volume / 2;
             }
 
-            // Add to entries array
             const entry = {
                 workType,
                 description,
@@ -364,326 +518,287 @@
                 height,
                 quantity,
                 volume,
-                dismantling,
-                erection
+                erection,
+                dismantling
             };
 
-            m3Entries.push(entry);
-            updateEntriesList();
-            clearCurrentForm();
+            workEntries.push(entry);
+            displayWorkEntries();
+            clearWorkForm();
             
-            // Enable proceed button
-            const proceedBtn = document.getElementById('proceedBtn');
-            proceedBtn.disabled = false;
-            proceedBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            if (workEntries.length > 0) {
+                document.getElementById('proceedBtn').style.display = 'block';
+            }
+
+            updateReportPreview();
         }
 
-        // Update entries list display
-        function updateEntriesList() {
-            const entriesList = document.getElementById('m3EntriesList');
-            const entriesContainer = document.getElementById('entriesContainer');
-            const entriesCount = document.getElementById('entriesCount');
+        function displayWorkEntries() {
+            const container = document.getElementById('workEntries');
+            container.innerHTML = '';
+
+            workEntries.forEach((entry, index) => {
+                const entryDiv = document.createElement('div');
+                entryDiv.className = 'entry-item';
+                entryDiv.innerHTML = `
+                    <button class="remove-btn" onclick="removeWorkEntry(${index})">×</button>
+                    <h4>${entry.workType} - ${entry.description}</h4>
+                    <p>Dimensions: ${entry.length} × ${entry.width} × ${entry.height} × ${entry.quantity}</p>
+                    <p>Volume: ${entry.volume.toFixed(2)} | Erection: ${entry.erection.toFixed(2)} | Dismantling: ${entry.dismantling.toFixed(2)}</p>
+                `;
+                container.appendChild(entryDiv);
+            });
+        }
+
+        function removeWorkEntry(index) {
+            workEntries.splice(index, 1);
+            displayWorkEntries();
+            updateReportPreview();
             
-            entriesCount.textContent = m3Entries.length;
+            if (workEntries.length === 0) {
+                document.getElementById('proceedBtn').style.display = 'none';
+            }
+        }
+
+        function clearWorkForm() {
+            document.getElementById('workType').value = '';
+            document.getElementById('description').value = '';
+            document.getElementById('length').value = '';
+            document.getElementById('width').value = '';
+            document.getElementById('height').value = '';
+            document.getElementById('quantity').value = '';
+            updateCalculations();
+        }
+
+        function updateWorkerList() {
+            const count = parseInt(document.getElementById('workerCount').value) || 2;
+            const container = document.getElementById('workerList');
+            container.innerHTML = '';
+
+            workers.forEach(worker => {
+                const workerDiv = document.createElement('div');
+                workerDiv.className = 'worker-item';
+                workerDiv.innerHTML = `
+                    <span class="worker-name">${worker}</span>
+                    <input type="number" class="worker-input" min="0" step="0.5" value="0" onchange="updateAttendanceCalc()">
+                `;
+                container.appendChild(workerDiv);
+            });
+
+            updateAttendanceCalc();
+        }
+
+        function updateAttendanceCalc() {
+            const workerCount = parseInt(document.getElementById('workerCount').value) || 2;
+            const workerInputs = document.querySelectorAll('.worker-input');
+            let totalOT = 0;
             
-            if (m3Entries.length > 0) {
-                entriesList.classList.remove('hidden');
-                entriesContainer.innerHTML = '';
-                
-                m3Entries.forEach((entry, index) => {
-                    const entryDiv = document.createElement('div');
-                    entryDiv.className = 'text-xs bg-white rounded p-2 mb-1 border';
-                    entryDiv.innerHTML = `
-                        <div class="flex justify-between items-center">
-                            <span><strong>${entry.workType}</strong> - ${entry.description}</span>
-                            <button onclick="removeEntry(${index})" class="text-red-500 hover:text-red-700">×</button>
-                        </div>
-                        <div class="text-gray-600 mt-1">
-                            ${entry.length}×${entry.width}×${entry.height}×${entry.quantity} = Vol: ${entry.volume.toFixed(2)}
-                        </div>
-                    `;
-                    entriesContainer.appendChild(entryDiv);
-                });
+            workerInputs.forEach(input => {
+                totalOT += parseFloat(input.value) || 0;
+            });
+
+            const totalManHours = (workerCount * 8) + totalOT;
+            document.getElementById('attendanceCalc').textContent = `Total Manhours: ${totalManHours}`;
+            
+            updateReportPreview();
+        }
+
+        function showCard(cardType) {
+            if (cardType === 'work') {
+                document.getElementById('workCard').classList.remove('hidden');
+                document.getElementById('attendanceCard').classList.add('hidden');
+                document.getElementById('workBtn').classList.add('active');
+                document.getElementById('attendanceBtn').classList.remove('active');
+                document.getElementById('step1').classList.add('active');
+                document.getElementById('step2').classList.remove('active');
+                currentCard = 'work';
             } else {
-                entriesList.classList.add('hidden');
+                document.getElementById('workCard').classList.add('hidden');
+                document.getElementById('attendanceCard').classList.remove('hidden');
+                document.getElementById('workBtn').classList.remove('active');
+                document.getElementById('attendanceBtn').classList.add('active');
+                document.getElementById('step1').classList.add('completed');
+                document.getElementById('step1').classList.remove('active');
+                document.getElementById('step2').classList.add('active');
+                currentCard = 'attendance';
             }
         }
 
-        // Remove entry from list
-        function removeEntry(index) {
-            m3Entries.splice(index, 1);
-            updateEntriesList();
-            
-            if (m3Entries.length === 0) {
-                const proceedBtn = document.getElementById('proceedBtn');
-                proceedBtn.disabled = true;
-                proceedBtn.classList.add('opacity-50', 'cursor-not-allowed');
-            }
-        }
-
-        // Clear current form
-        function clearCurrentForm() {
-            document.getElementById('m3Form').reset();
-            document.getElementById('volumeDisplay').textContent = '0';
-            document.getElementById('dismantlingDisplay').textContent = '0';
-            document.getElementById('erectionDisplay').textContent = '0';
-        }
-
-        // Proceed to overtime section
-        function proceedToOvertime() {
-            if (m3Entries.length === 0) {
-                alert('Please add at least one M3 entry');
+        function proceedToAttendance() {
+            if (workEntries.length === 0) {
+                alert('Please add at least one work entry');
                 return;
             }
+            showCard('attendance');
+        }
+
+        function goBackToWork() {
+            showCard('work');
+        }
+
+        function updateReportPreview() {
+            const date = document.getElementById('workDateInput').value;
+            const formattedDate = new Date(date).toLocaleDateString('en-GB');
             
-            document.getElementById('trackingSection').classList.add('hidden');
-            document.getElementById('overtimeSection').classList.remove('hidden');
-        }
-
-        // Back to M3 section
-        function backToM3() {
-            document.getElementById('overtimeSection').classList.add('hidden');
-            document.getElementById('trackingSection').classList.remove('hidden');
-        }
-
-        // Overtime worker selection functions
-        function clearAllOvertime() {
-            const hourInputs = document.querySelectorAll('#overtimeWorkersList input[type="number"]');
-            hourInputs.forEach(input => input.value = '');
-            updateOvertimeSelectedCount();
-        }
-
-        function updateOvertimeSelectedCount() {
-            const hourInputs = document.querySelectorAll('#overtimeWorkersList input[type="number"]');
-            let count = 0;
-            hourInputs.forEach(input => {
-                if (parseFloat(input.value) > 0) {
-                    count++;
-                }
+            let totalErection = 0;
+            let totalDismantling = 0;
+            
+            workEntries.forEach(entry => {
+                totalErection += entry.erection;
+                totalDismantling += entry.dismantling;
             });
-            document.getElementById('overtimeSelectedCount').textContent = count;
+
+            const workerCount = parseInt(document.getElementById('workerCount').value) || 2;
+            const workerInputs = document.querySelectorAll('.worker-input');
+            let totalOT = 0;
+            
+            workerInputs.forEach(input => {
+                totalOT += parseFloat(input.value) || 0;
+            });
+
+            const totalManHours = (workerCount * 8) + totalOT;
+            const productivity = totalManHours > 0 ? ((totalErection + totalDismantling / 2) / totalManHours).toFixed(2) : '0.00';
+
+            const report = `DAILY WORK REPORT
+
+SUPERVISOR NAME: ${currentSupervisor}
+DATE: ${formattedDate}
+TOTAL ERECTION: ${totalErection.toFixed(2)}
+TOTAL DISMANTLING: ${totalDismantling.toFixed(2)}
+TOTAL MANHOURS: ${totalManHours}
+PRODUCTIVITY: ${productivity}`;
+
+            document.getElementById('reportPreview').textContent = report;
         }
 
-        // Submit all data (M3 + Overtime)
-        function submitAllData() {
-            // Get overtime data for each worker
-            const overtimeData = [];
-            const hourInputs = document.querySelectorAll('#overtimeWorkersList input[type="number"]');
+        function submitAndShare() {
+            if (workEntries.length === 0) {
+                alert('Please add work entries before submitting');
+                return;
+            }
+
+            // Show loading state
+            const submitBtn = event.target;
+            submitBtn.textContent = 'Submitting...';
+            submitBtn.disabled = true;
+
+            // Prepare data for Google Sheets
+            const date = document.getElementById('workDateInput').value;
+            const workerCount = parseInt(document.getElementById('workerCount').value) || 2;
             
-            hourInputs.forEach(input => {
-                const hours = parseFloat(input.value) || 0;
-                if (hours > 0) {
-                    const workerId = input.id.replace('hours_', '');
-                    overtimeData.push({
-                        worker: workerId,
-                        hours: hours
+            // Get overtime data
+            const workerInputs = document.querySelectorAll('.worker-input');
+            const attendanceData = [];
+            let totalOT = 0;
+            
+            workerInputs.forEach((input, index) => {
+                const overtimeHours = parseFloat(input.value) || 0;
+                totalOT += overtimeHours;
+                
+                if (overtimeHours > 0) {
+                    attendanceData.push({
+                        date: date,
+                        supervisorName: currentSupervisor,
+                        workerName: workers[index],
+                        totalManhours: 8,
+                        otHours: overtimeHours,
+                        endShiftManhours: 8 + overtimeHours
                     });
                 }
             });
 
-            // Save all M3 entries to Google Sheets
-            saveAllM3ToGoogleSheets();
-            
-            // Save overtime data if any
-            if (overtimeData.length > 0) {
-                saveOvertimeToGoogleSheets(overtimeData);
-            }
+            // Prepare data payload
+            const payload = {
+                workEntries: workEntries.map(entry => ({
+                    date: date,
+                    supervisorName: currentSupervisor,
+                    workType: entry.workType,
+                    description: entry.description,
+                    l: entry.length,
+                    w: entry.width,
+                    h: entry.height,
+                    qty: entry.quantity,
+                    volume: entry.volume,
+                    dismantling: entry.dismantling,
+                    erection: entry.erection
+                })),
+                attendanceData: attendanceData
+            };
 
-            // Generate WhatsApp report
-            generateWhatsAppReport(overtimeData);
-        }
-
-        // Save all M3 entries to Google Sheets
-        function saveAllM3ToGoogleSheets() {
-            const date = new Date().toLocaleDateString('en-IN', {
-                day: '2-digit',
-                month: '2-digit', 
-                year: 'numeric'
-            });
+            // Send data to Google Apps Script using FormData
+            const formData = new FormData();
+            formData.append('data', JSON.stringify(payload));
             
-            m3Entries.forEach(entry => {
-                const rowData = [
-                    date,
-                    currentSupervisor,
-                    entry.description,
-                    entry.length,
-                    entry.width,
-                    entry.height,
-                    entry.quantity,
-                    entry.volume,
-                    entry.dismantling,
-                    entry.erection
-                ];
+            fetch('https://script.google.com/macros/s/AKfycbzU_b7mBsiW6tpqTT-6RvJuqBhEK9I_uyWLw7sc60QKnIoUMPxf8xlnTVUz0L_lAXBP/exec', {
+                method: 'POST',
+                body: formData
+            })
+            .then(() => {
+                // Data sent successfully, now share report
+                const report = document.getElementById('reportPreview').textContent;
+                const encodedReport = encodeURIComponent(report);
+                const whatsappUrl = `https://wa.me/?text=${encodedReport}`;
                 
-                // Google Apps Script Web App URL for M3
-                const scriptUrl = 'https://script.google.com/macros/s/AKfycbzU_b7mBsiW6tpqTT-6RvJuqBhEK9I_uyWLw7sc60QKnIoUMPxf8xlnTVUz0L_lAXBP/exec';
+                // Open WhatsApp
+                window.open(whatsappUrl, '_blank');
                 
-                fetch(scriptUrl, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'addM3Row',
-                        data: rowData
-                    })
-                }).catch(error => {
-                    console.log('M3 data sent to Google Sheets');
-                });
+                // Reset the app
+                setTimeout(() => {
+                    resetApp();
+                }, 1000);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Data saved locally. Sharing report...');
+                
+                // Still allow sharing even if there's an error
+                const report = document.getElementById('reportPreview').textContent;
+                const encodedReport = encodeURIComponent(report);
+                const whatsappUrl = `https://wa.me/?text=${encodedReport}`;
+                
+                window.open(whatsappUrl, '_blank');
+                
+                setTimeout(() => {
+                    resetApp();
+                }, 1000);
+            })
+            .finally(() => {
+                // Reset button state
+                submitBtn.textContent = 'Submit & Share Report';
+                submitBtn.disabled = false;
             });
         }
 
-        // Save overtime data to Google Sheets (ATTENDANCE sheet)
-        function saveOvertimeToGoogleSheets(overtimeData) {
-            const date = new Date().toLocaleDateString('en-IN', {
-                day: '2-digit',
-                month: '2-digit', 
-                year: 'numeric'
-            });
-            
-            // Create rows for each overtime worker with format: DATE, SUPERVISOR, WORKER, TOTAL MANHOURS, OT HOURS
-            const rows = overtimeData.map(item => [
-                date,
-                currentSupervisor,
-                item.worker,
-                8, // Total manhours (regular 8 hours)
-                item.hours // Individual overtime hours for each worker
-            ]);
-            
-            // Use the same script as shift start for ATTENDANCE sheet
-            const scriptUrl = 'https://script.google.com/macros/s/AKfycbzU_b7mBsiW6tpqTT-6RvJuqBhEK9I_uyWLw7sc60QKnIoUMPxf8xlnTVUz0L_lAXBP/exec';
-            
-            // Send each row individually to ensure proper data handling
-            rows.forEach(row => {
-                fetch(scriptUrl, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'addAttendanceRow',
-                        data: row
-                    })
-                }).then(() => {
-                    console.log('Overtime data sent for:', row[2]);
-                }).catch(error => {
-                    console.log('Error sending overtime data for:', row[2], error);
-                });
-            });
-        }
-
-        // Generate WhatsApp report
-        function generateWhatsAppReport(overtimeData) {
-            const date = new Date().toLocaleDateString('en-IN');
-            
-            // Calculate totals
-            let totalVolume = 0;
-            let totalDismantling = 0;
-            let totalErection = 0;
-            
-            m3Entries.forEach(entry => {
-                totalVolume += entry.volume;
-                totalDismantling += entry.dismantling;
-                totalErection += entry.erection;
-            });
-            
-            // Calculate total measurement (Erection + Dismantling*2 to get original volume)
-            const totalMeasurement = totalErection + (totalDismantling * 2);
-            
-            // Calculate manhours - only count workers who worked overtime
-            const workingWorkers = overtimeData.length; // Only workers with overtime hours
-            const regularHours = workingWorkers * 8; // Regular 8 hours per working worker
-            
-            // Calculate total overtime hours
-            let totalOvertimeHours = 0;
-            overtimeData.forEach(item => {
-                totalOvertimeHours += item.hours;
-            });
-            
-            const totalManhours = regularHours + totalOvertimeHours;
-            
-            // Calculate productivity (Total measurement / Total manhours)
-            const productivity = totalManhours > 0 ? (totalMeasurement / totalManhours).toFixed(2) : '0.00';
-            
-            // Create worker list with overtime
-            let workersList = '';
-            if (overtimeData.length > 0) {
-                workersList = '\nWorkers with Overtime:\n';
-                overtimeData.forEach(item => {
-                    workersList += `${item.worker} - ${item.hours} hrs\n`;
-                });
-            }
-            
-            const message = `SHIFT END REPORT
-
-Date: ${date}
-Supervisor: ${currentSupervisor}
-
-Total Erection: ${totalErection.toFixed(2)} m3
-Total Dismantling: ${totalDismantling.toFixed(2)} m3
-Total Measurement: ${totalMeasurement.toFixed(2)} m3
-
-Working Workers: ${workingWorkers}
-Regular Hours: ${regularHours} hrs
-Overtime Hours: ${totalOvertimeHours} hrs
-Total Manhours: ${totalManhours} hrs${workersList}
-Productivity: ${productivity} m3/hr
-
-Shift completed successfully`;
-
-            // Show success message
-            alert('All data saved successfully!');
-            
-            // Redirect to WhatsApp
-            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-            window.open(whatsappUrl, '_blank');
-            
-            // Reset for next shift
-            resetApp();
-        }
-
-        // Reset app for next shift
         function resetApp() {
-            m3Entries = [];
-            updateEntriesList();
-            clearCurrentForm();
-            clearAllOvertime();
-            
-            const proceedBtn = document.getElementById('proceedBtn');
-            proceedBtn.disabled = true;
-            proceedBtn.classList.add('opacity-50', 'cursor-not-allowed');
-            
-            // Go back to M3 section
-            document.getElementById('overtimeSection').classList.add('hidden');
-            document.getElementById('trackingSection').classList.remove('hidden');
-        }
-
-        // Logout function
-        function logout() {
+            // Clear all data
+            workEntries = [];
             currentSupervisor = '';
-            m3Entries = [];
+            
+            // Reset forms
             document.getElementById('supervisorSelect').value = '';
             document.getElementById('pinInput').value = '';
-            clearCurrentForm();
-            clearAllOvertime();
-            updateEntriesList();
+            document.getElementById('workerCount').value = '2';
             
-            // Reset proceed button
-            const proceedBtn = document.getElementById('proceedBtn');
-            proceedBtn.disabled = true;
-            proceedBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            // Reset work form
+            clearWorkForm();
             
-            // Show login section, hide others
-            document.getElementById('loginSection').classList.remove('hidden');
-            document.getElementById('trackingSection').classList.add('hidden');
-            document.getElementById('overtimeSection').classList.add('hidden');
-            document.getElementById('loginError').classList.add('hidden');
+            // Clear displays
+            document.getElementById('workEntries').innerHTML = '';
+            document.getElementById('proceedBtn').style.display = 'none';
+            
+            // Update worker list and calculations
+            updateWorkerList();
+            updateReportPreview();
+            
+            // Show auth screen
+            document.getElementById('authScreen').classList.remove('hidden');
+            document.getElementById('mainScreen').classList.add('hidden');
+            
+            // Reset to first card
+            showCard('work');
+            
+            alert('Report shared successfully! App has been reset for new entries.');
         }
-
-        // Initialize app when page loads
-        window.onload = init;
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96d5fb02073c5d11',t:'MTc1NDg5NjkzMi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</body>
 </html>
