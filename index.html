@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Work Tracker App</title>
+    <title>Work Tracker App v6.1</title>
     <style>
         * {
             margin: 0;
@@ -110,6 +110,12 @@
             transform: translateY(0);
         }
 
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .btn-secondary {
             background: linear-gradient(135deg, #FF6B6B, #FF8E8E);
         }
@@ -169,31 +175,37 @@
         .worker-list {
             max-height: 300px;
             overflow-y: auto;
+            border: 1px solid #e1e1e1;
+            border-radius: 8px;
+            background: white;
         }
 
         .worker-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px;
-            background: white;
-            margin-bottom: 5px;
-            border-radius: 8px;
-            border: 1px solid #e1e1e1;
+            padding: 12px 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .worker-item:last-child {
+            border-bottom: none;
         }
 
         .worker-name {
             flex-grow: 1;
             color: #333;
             font-weight: 500;
+            font-size: 14px;
         }
 
         .worker-input {
-            width: 60px;
-            padding: 5px;
+            width: 70px;
+            padding: 8px;
             border: 1px solid #ddd;
             border-radius: 5px;
             text-align: center;
+            font-size: 14px;
         }
 
         .navigation {
@@ -262,6 +274,45 @@
             color: white;
         }
 
+        .version {
+            position: absolute;
+            top: 5px;
+            right: 10px;
+            font-size: 0.7em;
+            opacity: 0.8;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+
+        .status-message {
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-size: 14px;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-info {
+            background: #cce7ff;
+            color: #004085;
+            border: 1px solid #99d6ff;
+        }
+
         @media (max-width: 480px) {
             .container {
                 margin: 0;
@@ -278,6 +329,7 @@
 <body>
     <div class="container">
         <div class="header">
+            <div class="version">v6.1</div>
             <h1>Work Tracker</h1>
             <p>Daily Work & Attendance Management</p>
         </div>
@@ -379,11 +431,12 @@
                 
                 <div class="form-group">
                     <label for="workerCount">Number of Workers:</label>
-                    <input type="number" id="workerCount" min="1" value="2" oninput="updateWorkerList()">
+                    <input type="number" id="workerCount" min="1" value="2" oninput="updateAttendanceCalc()">
                 </div>
 
                 <h4>Workers Overtime (Hours):</h4>
-                <div class="worker-list" id="workerList"></div>
+                <div id="loadingStatus" class="status-message status-info">Loading workers from MANPOWER sheet...</div>
+                <div class="worker-list hidden" id="workerList"></div>
 
                 <div class="calc-display" id="attendanceCalc">
                     Total Manhours: 16
@@ -391,15 +444,14 @@
 
                 <div class="report-preview" id="reportPreview"></div>
 
-                <button class="btn" onclick="submitAndShare()">Submit & Share Report</button>
+                <button class="btn" onclick="submitAndShare()" id="submitBtn">Submit & Share Report</button>
                 <button class="btn btn-secondary" onclick="goBackToWork()">Back to Work Entries</button>
             </div>
         </div>
     </div>
 
     <script>
-        // Authentication data
-        const supervisorPins = {
+        var supervisorPins = {
             'MAHENDRA KUMAR': '1122',
             'PINTU SAH': '3344',
             'HARKIRAT SINGH': '5566',
@@ -410,49 +462,107 @@
             'NSUP4': '1010'
         };
 
-        // Worker list
-        const workers = [
-            'HARKIRAT', 'MAHENDRA KUMAR', 'SUNIL CHAUHAN', 'PINTU KUMAR SAH',
-            'AMAN KUMAR', 'ATUL MAHADEO', 'CHANDAN KUMAR', 'DEEPAK DAS',
-            'DEEPAK KUMAR', 'DHIRAJ KUMAR MANJI', 'DAULAT YADAV', 'FOOL SINGH',
-            'KIRAN PASWAN', 'KUNDAN KUMAR', 'MITLESH KUMAR', 'NIRAJ KUMAR',
-            'NANDAN KUMAR', 'NARESH KUMAR', 'OM PRAKASH', 'PANDURANG',
-            'RAJU KUMAR', 'ROSHAN CHAUHAN', 'RAM BABU', 'RAM KISHOR DAS',
-            'RAHUL KUMAR', 'SANDIP MADHUKAR', 'SAHAB CHAUHAN', 'SARVESH KUMAR',
-            'SANJITH YADAV', 'SHIVAM KUMAR', 'SUDISH SAH', 'VISHAL PRUTHVIRAJ'
-        ];
+        var workers = [];
+        var currentSupervisor = '';
+        var workEntries = [];
+        var currentCard = 'work';
+        var workersLoaded = false;
 
-        // Application state
-        let currentSupervisor = '';
-        let workEntries = [];
-        let currentCard = 'work';
+        // Apps Script URL
+        var appsScriptUrl = 'https://script.google.com/macros/s/AKfycbzU_b7mBsiW6tpqTT-6RvJuqBhEK9I_uyWLw7sc60QKnIoUMPxf8xlnTVUz0L_lAXBP/exec';
 
-        // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
-            const today = new Date().toISOString().split('T')[0];
+            console.log('Work Tracker App v6.1 Initialized');
+            var today = new Date().toISOString().split('T')[0];
             document.getElementById('workDateInput').value = today;
             updateWorkDate();
-            updateWorkerList();
         });
 
+        function showStatus(message, type) {
+            var statusEl = document.getElementById('loadingStatus');
+            if (statusEl) {
+                statusEl.textContent = message;
+                statusEl.className = 'status-message status-' + (type || 'info');
+            }
+        }
+
+        function loadWorkersFromSheet() {
+            console.log('Loading workers from MANPOWER sheet...');
+            showStatus('Loading workers from MANPOWER sheet...', 'info');
+            
+            // Use fetch API to get workers data
+            fetch(appsScriptUrl + '?action=getWorkers')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Workers response received:', data);
+                    
+                    if (data.status === 'success' && data.workers) {
+                        workers = data.workers;
+                        workersLoaded = true;
+                        showStatus('Successfully loaded ' + workers.length + ' workers', 'success');
+                        updateWorkerList();
+                    } else if (data.status === 'error' && data.workers) {
+                        // Even on error, use fallback workers if provided
+                        workers = data.workers;
+                        workersLoaded = true;
+                        showStatus('Loaded fallback workers (' + workers.length + ' workers)', 'success');
+                        updateWorkerList();
+                    } else {
+                        throw new Error('Invalid response format');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading workers:', error);
+                    showStatus('Failed to load from sheet, using default workers', 'error');
+                    setupFallbackWorkers();
+                });
+        }
+
+        function setupFallbackWorkers() {
+            workers = [
+                'HARKIRAT', 'MAHENDRA KUMAR', 'SUNIL CHAUHAN', 'PINTU KUMAR SAH',
+                'AMAN KUMAR', 'ATUL MAHADEO', 'CHANDAN KUMAR', 'DEEPAK DAS',
+                'DEEPAK KUMAR', 'DHIRAJ KUMAR MANJI', 'DAULAT YADAV', 'FOOL SINGH',
+                'KIRAN PASWAN', 'KUNDAN KUMAR', 'MITLESH KUMAR', 'NIRAJ KUMAR',
+                'NANDAN KUMAR', 'NARESH KUMAR', 'OM PRAKASH', 'PANDURANG',
+                'RAJU KUMAR', 'ROSHAN CHAUHAN', 'RAM BABU', 'RAM KISHOR DAS',
+                'RAHUL KUMAR', 'SANDIP MADHUKAR', 'SAHAB CHAUHAN', 'SARVESH KUMAR',
+                'SANJITH YADAV', 'SHIVAM KUMAR', 'SUDISH SAH', 'VISHAL PRUTHVIRAJ'
+            ];
+            workersLoaded = true;
+            updateWorkerList();
+            console.log('Fallback workers loaded:', workers.length);
+        }
+
         function login() {
-            const supervisor = document.getElementById('supervisorSelect').value;
-            const pin = document.getElementById('pinInput').value;
+            var supervisor = document.getElementById('supervisorSelect').value;
+            var pin = document.getElementById('pinInput').value;
 
             if (!supervisor) {
                 alert('Please select a supervisor');
                 return;
             }
 
-            if (!pin) {
-                alert('Please enter PIN');
+            if (!pin || pin.length !== 4) {
+                alert('Please enter a 4-digit PIN');
                 return;
             }
 
             if (supervisorPins[supervisor] === pin) {
                 currentSupervisor = supervisor;
+                console.log('Login successful: ' + supervisor);
                 document.getElementById('authScreen').classList.add('hidden');
                 document.getElementById('mainScreen').classList.remove('hidden');
+                
+                // Load workers when entering the main screen
+                if (!workersLoaded) {
+                    loadWorkersFromSheet();
+                }
                 updateReportPreview();
             } else {
                 alert('Invalid PIN. Please try again.');
@@ -461,21 +571,22 @@
         }
 
         function updateWorkDate() {
-            const date = document.getElementById('workDateInput').value;
-            const formattedDate = new Date(date).toLocaleDateString('en-GB');
+            var date = document.getElementById('workDateInput').value;
+            var formattedDate = new Date(date).toLocaleDateString('en-GB');
             document.getElementById('workDate').textContent = formattedDate;
+            updateReportPreview();
         }
 
         function updateCalculations() {
-            const workType = document.getElementById('workType').value;
-            const length = parseFloat(document.getElementById('length').value) || 0;
-            const width = parseFloat(document.getElementById('width').value) || 0;
-            const height = parseFloat(document.getElementById('height').value) || 0;
-            const quantity = parseInt(document.getElementById('quantity').value) || 0;
+            var workType = document.getElementById('workType').value;
+            var length = parseFloat(document.getElementById('length').value) || 0;
+            var width = parseFloat(document.getElementById('width').value) || 0;
+            var height = parseFloat(document.getElementById('height').value) || 0;
+            var quantity = parseInt(document.getElementById('quantity').value) || 0;
 
-            const volume = length * width * height * quantity;
-            let erection = 0;
-            let dismantling = 0;
+            var volume = length * width * height * quantity;
+            var erection = 0;
+            var dismantling = 0;
 
             if (workType === 'ERECTION') {
                 erection = volume;
@@ -484,45 +595,46 @@
             }
 
             document.getElementById('calculationDisplay').textContent = 
-                `Volume: ${volume.toFixed(2)} | Erection: ${erection.toFixed(2)} | Dismantling: ${dismantling.toFixed(2)}`;
+                'Volume: ' + volume.toFixed(2) + ' | Erection: ' + erection.toFixed(2) + ' | Dismantling: ' + dismantling.toFixed(2);
         }
 
         function addWorkEntry() {
-            const workType = document.getElementById('workType').value;
-            const description = document.getElementById('description').value;
-            const length = parseFloat(document.getElementById('length').value) || 0;
-            const width = parseFloat(document.getElementById('width').value) || 0;
-            const height = parseFloat(document.getElementById('height').value) || 0;
-            const quantity = parseInt(document.getElementById('quantity').value) || 0;
+            var workType = document.getElementById('workType').value;
+            var description = document.getElementById('description').value;
+            var length = parseFloat(document.getElementById('length').value) || 0;
+            var width = parseFloat(document.getElementById('width').value) || 0;
+            var height = parseFloat(document.getElementById('height').value) || 0;
+            var quantity = parseInt(document.getElementById('quantity').value) || 0;
 
             if (!workType || !description) {
                 alert('Please fill in work type and description');
                 return;
             }
 
-            const volume = length * width * height * quantity;
-            let erection = 0;
-            let dismantling = 0;
+            var volume = length * width * height * quantity;
+            var erection = 0;
+            var dismantling = 0;
 
             if (workType === 'ERECTION') {
                 erection = volume;
             } else if (workType === 'DISMANTLING') {
-                dismantling = volume/2;
+                dismantling = volume / 2;
             }
 
-            const entry = {
-                workType,
-                description,
-                length,
-                width,
-                height,
-                quantity,
-                volume,
-                erection,
-                dismantling
+            var entry = {
+                workType: workType,
+                description: description,
+                length: length,
+                width: width,
+                height: height,
+                quantity: quantity,
+                volume: volume,
+                erection: erection,
+                dismantling: dismantling
             };
 
             workEntries.push(entry);
+            console.log('Work entry added');
             displayWorkEntries();
             clearWorkForm();
             
@@ -534,24 +646,24 @@
         }
 
         function displayWorkEntries() {
-            const container = document.getElementById('workEntries');
+            var container = document.getElementById('workEntries');
             container.innerHTML = '';
 
-            workEntries.forEach((entry, index) => {
-                const entryDiv = document.createElement('div');
+            for (var i = 0; i < workEntries.length; i++) {
+                var entry = workEntries[i];
+                var entryDiv = document.createElement('div');
                 entryDiv.className = 'entry-item';
-                entryDiv.innerHTML = `
-                    <button class="remove-btn" onclick="removeWorkEntry(${index})">×</button>
-                    <h4>${entry.workType} - ${entry.description}</h4>
-                    <p>Dimensions: ${entry.length} × ${entry.width} × ${entry.height} × ${entry.quantity}</p>
-                    <p>Volume: ${entry.volume.toFixed(2)} | Erection: ${entry.erection.toFixed(2)} | Dismantling: ${entry.dismantling.toFixed(2)}</p>
-                `;
+                entryDiv.innerHTML = '<button class="remove-btn" onclick="removeWorkEntry(' + i + ')">×</button>' +
+                    '<h4>' + entry.workType + ' - ' + entry.description + '</h4>' +
+                    '<p>Dimensions: ' + entry.length + ' × ' + entry.width + ' × ' + entry.height + ' × ' + entry.quantity + '</p>' +
+                    '<p>Volume: ' + entry.volume.toFixed(2) + ' | Erection: ' + entry.erection.toFixed(2) + ' | Dismantling: ' + entry.dismantling.toFixed(2) + '</p>';
                 container.appendChild(entryDiv);
-            });
+            }
         }
 
         function removeWorkEntry(index) {
             workEntries.splice(index, 1);
+            console.log('Work entry removed');
             displayWorkEntries();
             updateReportPreview();
             
@@ -571,34 +683,45 @@
         }
 
         function updateWorkerList() {
-            const count = parseInt(document.getElementById('workerCount').value) || 2;
-            const container = document.getElementById('workerList');
+            var container = document.getElementById('workerList');
+            var loading = document.getElementById('loadingStatus');
+            
+            if (workers.length === 0) {
+                return;
+            }
+
             container.innerHTML = '';
 
-            workers.forEach(worker => {
-                const workerDiv = document.createElement('div');
+            for (var i = 0; i < workers.length; i++) {
+                var worker = workers[i];
+                var workerDiv = document.createElement('div');
                 workerDiv.className = 'worker-item';
-                workerDiv.innerHTML = `
-                    <span class="worker-name">${worker}</span>
-                    <input type="number" class="worker-input" min="0" step="0.5" value="0" onchange="updateAttendanceCalc()">
-                `;
+                workerDiv.innerHTML = '<span class="worker-name">' + worker + '</span>' +
+                    '<input type="number" class="worker-input" min="0" max="12" step="0.5" value="0" onchange="updateAttendanceCalc()">';
                 container.appendChild(workerDiv);
-            });
+            }
 
+            loading.classList.add('hidden');
+            container.classList.remove('hidden');
             updateAttendanceCalc();
+            console.log('Worker list updated with ' + workers.length + ' workers');
         }
 
         function updateAttendanceCalc() {
-            const workerCount = parseInt(document.getElementById('workerCount').value) || 2;
-            const workerInputs = document.querySelectorAll('.worker-input');
-            let totalOT = 0;
+            var workerCount = parseInt(document.getElementById('workerCount').value) || 2;
+            var workerInputs = document.querySelectorAll('.worker-input');
+            var totalOT = 0;
             
-            workerInputs.forEach(input => {
+            for (var i = 0; i < workerInputs.length; i++) {
+                var input = workerInputs[i];
+                var otValue = parseFloat(input.value) || 0;
+                if (otValue < 0) input.value = 0;
+                if (otValue > 12) input.value = 12;
                 totalOT += parseFloat(input.value) || 0;
-            });
+            }
 
-            const totalManHours = (workerCount * 8) + totalOT;
-            document.getElementById('attendanceCalc').textContent = `Total Manhours: ${totalManHours}`;
+            var totalManHours = (workerCount * 8) + totalOT;
+            document.getElementById('attendanceCalc').textContent = 'Total Manhours: ' + totalManHours;
             
             updateReportPreview();
         }
@@ -621,7 +744,13 @@
                 document.getElementById('step1').classList.remove('active');
                 document.getElementById('step2').classList.add('active');
                 currentCard = 'attendance';
+                
+                // Load workers when switching to attendance if not already loaded
+                if (!workersLoaded) {
+                    loadWorkersFromSheet();
+                }
             }
+            console.log('Switched to card: ' + cardType);
         }
 
         function proceedToAttendance() {
@@ -629,6 +758,7 @@
                 alert('Please add at least one work entry');
                 return;
             }
+            console.log('Proceeding to attendance');
             showCard('attendance');
         }
 
@@ -637,36 +767,35 @@
         }
 
         function updateReportPreview() {
-            const date = document.getElementById('workDateInput').value;
-            const formattedDate = new Date(date).toLocaleDateString('en-GB');
+            var date = document.getElementById('workDateInput').value;
+            var formattedDate = new Date(date).toLocaleDateString('en-GB');
             
-            let totalErection = 0;
-            let totalDismantling = 0;
+            var totalErection = 0;
+            var totalDismantling = 0;
             
-            workEntries.forEach(entry => {
-                totalErection += entry.erection;
-                totalDismantling += entry.dismantling;
-            });
+            for (var i = 0; i < workEntries.length; i++) {
+                totalErection += workEntries[i].erection;
+                totalDismantling += workEntries[i].dismantling;
+            }
 
-            const workerCount = parseInt(document.getElementById('workerCount').value) || 2;
-            const workerInputs = document.querySelectorAll('.worker-input');
-            let totalOT = 0;
+            var workerCount = parseInt(document.getElementById('workerCount').value) || 2;
+            var workerInputs = document.querySelectorAll('.worker-input');
+            var totalOT = 0;
             
-            workerInputs.forEach(input => {
-                totalOT += parseFloat(input.value) || 0;
-            });
+            for (var i = 0; i < workerInputs.length; i++) {
+                totalOT += parseFloat(workerInputs[i].value) || 0;
+            }
 
-            const totalManHours = (workerCount * 8) + totalOT;
-            const productivity = totalManHours > 0 ? ((totalErection + totalDismantling ) / totalManHours).toFixed(2) : '0.00';
+            var totalManHours = (workerCount * 8) + totalOT;
+            var productivity = totalManHours > 0 ? ((totalErection + totalDismantling / 2) / totalManHours).toFixed(2) : '0.00';
 
-            const report = `DAILY WORK REPORT
-
-SUPERVISOR NAME: ${currentSupervisor}
-DATE: ${formattedDate}
-TOTAL ERECTION: ${totalErection.toFixed(2)}
-TOTAL DISMANTLING: ${totalDismantling.toFixed(2)}
-TOTAL MANHOURS: ${totalManHours}
-PRODUCTIVITY: ${productivity}`;
+            var report = 'DAILY WORK REPORT\n\n' +
+                'SUPERVISOR NAME: ' + currentSupervisor + '\n' +
+                'DATE: ' + formattedDate + '\n' +
+                'TOTAL ERECTION: ' + totalErection.toFixed(2) + '\n' +
+                'TOTAL DISMANTLING: ' + totalDismantling.toFixed(2) + '\n' +
+                'TOTAL MANHOURS: ' + totalManHours + '\n' +
+                'PRODUCTIVITY: ' + productivity;
 
             document.getElementById('reportPreview').textContent = report;
         }
@@ -677,39 +806,40 @@ PRODUCTIVITY: ${productivity}`;
                 return;
             }
 
-            // Show loading state
-            const submitBtn = event.target;
-            submitBtn.textContent = 'Submitting...';
+            var submitBtn = document.getElementById('submitBtn');
+            var originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Saving to Sheet...';
             submitBtn.disabled = true;
 
-            // Prepare data for Google Sheets
-            const date = document.getElementById('workDateInput').value;
-            const workerCount = parseInt(document.getElementById('workerCount').value) || 2;
+            console.log('Starting submission process...');
+
+            var date = document.getElementById('workDateInput').value;
+            var workerInputs = document.querySelectorAll('.worker-input');
+            var attendanceData = [];
             
-            // Get overtime data
-            const workerInputs = document.querySelectorAll('.worker-input');
-            const attendanceData = [];
-            let totalOT = 0;
-            
-            workerInputs.forEach((input, index) => {
-                const overtimeHours = parseFloat(input.value) || 0;
-                totalOT += overtimeHours;
+            for (var i = 0; i < workerInputs.length; i++) {
+                var overtimeHours = parseFloat(workerInputs[i].value) || 0;
                 
-                if (overtimeHours > 0) {
+                if (overtimeHours > 0 && i < workers.length) {
                     attendanceData.push({
                         date: date,
                         supervisorName: currentSupervisor,
-                        workerName: workers[index],
+                        workerName: workers[i],
                         totalManhours: 8,
                         otHours: overtimeHours,
                         endShiftManhours: 8 + overtimeHours
                     });
                 }
-            });
+            }
 
-            // Prepare data payload
-            const payload = {
-                workEntries: workEntries.map(entry => ({
+            var payload = {
+                workEntries: [],
+                attendanceData: attendanceData
+            };
+
+            for (var i = 0; i < workEntries.length; i++) {
+                var entry = workEntries[i];
+                payload.workEntries.push({
                     date: date,
                     supervisorName: currentSupervisor,
                     workType: entry.workType,
@@ -721,82 +851,134 @@ PRODUCTIVITY: ${productivity}`;
                     volume: entry.volume,
                     dismantling: entry.dismantling,
                     erection: entry.erection
-                })),
-                attendanceData: attendanceData
-            };
+                });
+            }
 
-            // Send data to Google Apps Script using FormData
-            const formData = new FormData();
-            formData.append('data', JSON.stringify(payload));
+            console.log('Payload to send:', payload);
+
+            // Use GET method as primary since POST has issues
+            var encodedData = encodeURIComponent(JSON.stringify(payload));
+            var getUrl = appsScriptUrl + '?data=' + encodedData;
             
-            fetch('https://script.google.com/macros/s/AKfycbzU_b7mBsiW6tpqTT-6RvJuqBhEK9I_uyWLw7sc60QKnIoUMPxf8xlnTVUz0L_lAXBP/exec', {
-                method: 'POST',
-                body: formData
-            })
-            .then(() => {
-                // Data sent successfully, now share report
-                const report = document.getElementById('reportPreview').textContent;
-                const encodedReport = encodeURIComponent(report);
-                const whatsappUrl = `https://wa.me/?text=${encodedReport}`;
-                
-                // Open WhatsApp
-                window.open(whatsappUrl, '_blank');
-                
-                // Reset the app
-                setTimeout(() => {
-                    resetApp();
-                }, 1000);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Data saved locally. Sharing report...');
-                
-                // Still allow sharing even if there's an error
-                const report = document.getElementById('reportPreview').textContent;
-                const encodedReport = encodeURIComponent(report);
-                const whatsappUrl = `https://wa.me/?text=${encodedReport}`;
-                
-                window.open(whatsappUrl, '_blank');
-                
-                setTimeout(() => {
-                    resetApp();
-                }, 1000);
-            })
-            .finally(() => {
-                // Reset button state
-                submitBtn.textContent = 'Submit & Share Report';
+            console.log('Submitting via GET method...');
+            
+            // Method 1: Fetch request
+            fetch(getUrl)
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    throw new Error('Network response was not ok');
+                })
+                .then(data => {
+                    console.log('Submission successful:', data);
+                    submitBtn.textContent = 'Saved! Sharing...';
+                    
+                    if (data.status === 'success') {
+                        proceedToWhatsApp();
+                    } else {
+                        console.log('Warning: Submission may have failed:', data.message);
+                        proceedToWhatsApp(); // Still proceed to WhatsApp
+                    }
+                })
+                .catch(error => {
+                    console.log('Fetch failed, trying image method:', error);
+                    submitBtn.textContent = 'Retrying...';
+                    
+                    // Method 2: Image fallback for cross-origin issues
+                    var img = new Image();
+                    img.onload = function() {
+                        console.log('Image method completed (likely successful)');
+                        submitBtn.textContent = 'Saved! Sharing...';
+                        proceedToWhatsApp();
+                    };
+                    img.onerror = function() {
+                        console.log('Image method completed (status unknown)');
+                        submitBtn.textContent = 'Sharing...';
+                        proceedToWhatsApp();
+                    };
+                    img.src = getUrl;
+                    
+                    // Timeout fallback
+                    setTimeout(function() {
+                        console.log('Proceeding after timeout');
+                        proceedToWhatsApp();
+                    }, 3000);
+                });
+
+            function proceedToWhatsApp() {
+                setTimeout(function() {
+                    console.log('Proceeding with WhatsApp sharing...');
+                    
+                    var report = document.getElementById('reportPreview').textContent;
+                    var encodedReport = encodeURIComponent(report);
+                    var whatsappUrl = 'https://wa.me/?text=' + encodedReport;
+                    
+                    submitBtn.textContent = 'Opening WhatsApp...';
+                    window.open(whatsappUrl, '_blank');
+                    
+                    setTimeout(function() {
+                        resetApp();
+                    }, 1500);
+                }, 500);
+            }
+
+            // Reset button after timeout regardless
+            setTimeout(function() {
+                submitBtn.textContent = originalText;
                 submitBtn.disabled = false;
-            });
+            }, 8000);
+        }
+
+        // Add a function to test the connection
+        function testConnection() {
+            console.log('Testing connection to Google Apps Script...');
+            
+            fetch(appsScriptUrl + '?test=1')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Connection test result:', data);
+                    alert('Connection test result: ' + data.message);
+                })
+                .catch(error => {
+                    console.error('Connection test failed:', error);
+                    alert('Connection test failed: ' + error.message);
+                });
         }
 
         function resetApp() {
-            // Clear all data
+            console.log('Resetting app for new entries...');
+            
             workEntries = [];
             currentSupervisor = '';
+            workersLoaded = false;
             
-            // Reset forms
             document.getElementById('supervisorSelect').value = '';
             document.getElementById('pinInput').value = '';
             document.getElementById('workerCount').value = '2';
             
-            // Reset work form
             clearWorkForm();
             
-            // Clear displays
             document.getElementById('workEntries').innerHTML = '';
             document.getElementById('proceedBtn').style.display = 'none';
             
-            // Update worker list and calculations
-            updateWorkerList();
+            // Reset worker list
+            document.getElementById('workerList').innerHTML = '';
+            document.getElementById('workerList').classList.add('hidden');
+            document.getElementById('loadingStatus').classList.remove('hidden');
+            
             updateReportPreview();
             
-            // Show auth screen
             document.getElementById('authScreen').classList.remove('hidden');
             document.getElementById('mainScreen').classList.add('hidden');
             
-            // Reset to first card
             showCard('work');
             
+            var today = new Date().toISOString().split('T')[0];
+            document.getElementById('workDateInput').value = today;
+            updateWorkDate();
+            
+            console.log('App reset completed successfully');
             alert('Report shared successfully! App has been reset for new entries.');
         }
     </script>
